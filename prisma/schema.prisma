@@ -1,0 +1,116 @@
+import mongoose from "mongoose";
+
+const { Schema } = mongoose;
+
+// =========================
+// User Schema
+// =========================
+const UserSchema = new Schema(
+  {
+    clerkUserId: { type: String, unique: true, required: true },
+    email: { type: String, unique: true, required: true },
+    name: { type: String },
+    imageUrl: { type: String },
+    phone: { type: String },
+    role: { type: String, enum: ["USER", "ADMIN"], default: "USER" },
+  },
+  { timestamps: true }
+);
+
+// =========================
+// Car Schema
+// =========================
+const CarSchema = new Schema(
+  {
+    make: { type: String, required: true },
+    model: { type: String, required: true },
+    year: { type: Number, required: true },
+    price: { type: mongoose.Types.Decimal128, required: true }, // Prisma Decimal → Decimal128
+    mileage: { type: Number, required: true },
+    color: { type: String, required: true },
+    fuelType: { type: String, required: true },
+    transmission: { type: String, required: true },
+    bodyType: { type: String, required: true },
+    seats: { type: Number },
+    description: { type: String, required: true },
+    status: { type: String, enum: ["AVAILABLE", "UNAVAILABLE", "SOLD"], default: "AVAILABLE" },
+    featured: { type: Boolean, default: false },
+    images: [{ type: String }], // Array of URLs
+  },
+  { timestamps: true }
+);
+
+// =========================
+// DealershipInfo Schema
+// =========================
+const DealershipInfoSchema = new Schema(
+  {
+    name: { type: String, default: "Vehiql Motors" },
+    address: { type: String, default: "69 Car Street, Autoville, CA 69420" },
+    phone: { type: String, default: "+1 (555) 123-4567" },
+    email: { type: String, default: "contact@vehiql.com" },
+    workingHours: [{ type: Schema.Types.ObjectId, ref: "WorkingHour" }],
+  },
+  { timestamps: true }
+);
+
+// =========================
+// WorkingHour Schema
+// =========================
+const WorkingHourSchema = new Schema(
+  {
+    dealershipId: { type: Schema.Types.ObjectId, ref: "DealershipInfo", required: true },
+    dayOfWeek: { 
+      type: String, 
+      enum: ["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY","SUNDAY"], 
+      required: true 
+    },
+    openTime: { type: String, required: true },  // Format "HH:MM"
+    closeTime: { type: String, required: true },
+    isOpen: { type: Boolean, default: true },
+  },
+  { timestamps: true }
+);
+
+// =========================
+// UserSavedCar Schema
+// =========================
+const UserSavedCarSchema = new Schema(
+  {
+    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    carId: { type: Schema.Types.ObjectId, ref: "Car", required: true },
+    savedAt: { type: Date, default: Date.now },
+  },
+  { timestamps: false }
+);
+UserSavedCarSchema.index({ userId: 1, carId: 1 }, { unique: true });
+
+// =========================
+// TestDriveBooking Schema
+// =========================
+const TestDriveBookingSchema = new Schema(
+  {
+    carId: { type: Schema.Types.ObjectId, ref: "Car", required: true },
+    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    bookingDate: { type: Date, required: true },
+    startTime: { type: String, required: true }, // "HH:MM"
+    endTime: { type: String, required: true },
+    status: { 
+      type: String, 
+      enum: ["PENDING", "CONFIRMED", "COMPLETED", "CANCELLED", "NO_SHOW"], 
+      default: "PENDING" 
+    },
+    notes: { type: String },
+  },
+  { timestamps: true }
+);
+
+// =========================
+// Model Exports
+// =========================
+export const User = mongoose.models.User || mongoose.model("User", UserSchema);
+export const Car = mongoose.models.Car || mongoose.model("Car", CarSchema);
+export const DealershipInfo = mongoose.models.DealershipInfo || mongoose.model("DealershipInfo", DealershipInfoSchema);
+export const WorkingHour = mongoose.models.WorkingHour || mongoose.model("WorkingHour", WorkingHourSchema);
+export const UserSavedCar = mongoose.models.UserSavedCar || mongoose.model("UserSavedCar", UserSavedCarSchema);
+export const TestDriveBooking = mongoose.models.TestDriveBooking || mongoose.model("TestDriveBooking", TestDriveBookingSchema);
